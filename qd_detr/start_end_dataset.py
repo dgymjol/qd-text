@@ -8,6 +8,9 @@ from os.path import join, exists
 from utils.basic_utils import load_jsonl, l2_normalize_np_array
 from utils.tensor_utils import pad_sequences_1d
 from qd_detr.span_utils import span_xx_to_cxw
+from run_on_video.data_utils import ClipFeatureExtractor
+import json
+import torch.nn.functional as F
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +33,7 @@ class StartEndDataset(Dataset):
                  max_q_l=32, max_v_l=75, data_ratio=1.0, ctx_mode="video",
                  normalize_v=True, normalize_t=True, load_labels=True,
                  clip_len=2, max_windows=5, span_loss_type="l1", txt_drop_ratio=0,
-                 dset_domain=None):
+                 dset_domain=None, clip_model_name_or_path="ViT-B/32", query_json_file=None):
         self.dset_name = dset_name
         self.data_path = data_path
         self.data_ratio = data_ratio
@@ -70,6 +73,18 @@ class StartEndDataset(Dataset):
                     new_data.append(d)
             self.data = new_data
         
+        if query_json_file is not None:
+            with open(query_json_file, 'r') as f: 
+                self.query_json = json.load(f)
+
+            clip_model_name_or_path = clip_model_name_or_path
+            logger.info("Loading feature extractors {} ...".format(clip_model_name_or_path))
+            self.feature_extractor = ClipFeatureExtractor(
+                framerate=1/self.clip_len, size=224, centercrop=True,
+                model_name_or_path=clip_model_name_or_path, device='cuda'
+            )
+        else:
+            self.feature_extractor = None
 
     def load_data(self):
         datalist = load_jsonl(self.data_path)
@@ -268,20 +283,36 @@ class StartEndDataset(Dataset):
         return windows
 
     def _get_query_feat_by_qid(self, qid):
-        if self.dset_name == 'tvsum':
-            q_feat = np.load(join(self.q_feat_dir, "{}.npz".format(qid))) # 'token', 'text'
-            return torch.from_numpy(q_feat['token'])
-        else:
-            # QVhighlight dataset
-            q_feat_path = join(self.q_feat_dir, f"qid{qid}.npz")
-            q_feat = np.load(q_feat_path)[self.q_feat_type].astype(np.float32)
+        if self.feature_extractor is not None:
+            query_list = [self.query_json[str(qid)]]
+            q_feat = self.feature_extractor.encode_text(query_list)[0]  # #text * (L, d)
+
             if self.q_feat_type == "last_hidden_state":
                 q_feat = q_feat[:self.max_q_l]
             if self.normalize_t:
-                q_feat = l2_normalize_np_array(q_feat)
+                q_feat = F.normalize(q_feat, dim=-1, eps=1e-5)
             if self.txt_drop_ratio > 0:
                 q_feat = self.random_drop_rows(q_feat)
-        return torch.from_numpy(q_feat)  # (D, ) or (Lq, D)
+
+            return q_feat
+        
+        else:
+
+            if self.dset_name == 'tvsum':
+                q_feat = np.load(join(self.q_feat_dir, "{}.npz".format(qid))) # 'token', 'text'
+                return torch.from_numpy(q_feat['token'])
+            else:
+                # QVhighlight dataset
+                q_feat_path = join(self.q_feat_dir, f"qid{qid}.npz")
+                q_feat = np.load(q_feat_path)[self.q_feat_type].astype(np.float32)
+                if self.q_feat_type == "last_hidden_state":
+                    q_feat = q_feat[:self.max_q_l]
+                if self.normalize_t:
+                    q_feat = l2_normalize_np_array(q_feat)
+                if self.txt_drop_ratio > 0:
+                    q_feat = self.random_drop_rows(q_feat)
+
+            return torch.from_numpy(q_feat)  # (D, ) or (Lq, D)
 
     def random_drop_rows(self, embeddings):
         """randomly mask num_drop rows in embeddings to be zero.

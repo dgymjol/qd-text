@@ -37,7 +37,7 @@ fi
 #### training
 bsz=32
 
-gpu_num=0
+gpu_num=2
 
 CUDA_VISIBLE_DEVICES=${gpu_num} PYTHONPATH=$PYTHONPATH:. python qd_detr/train.py \
 --dset_name ${dset_name} \
@@ -51,22 +51,6 @@ CUDA_VISIBLE_DEVICES=${gpu_num} PYTHONPATH=$PYTHONPATH:. python qd_detr/train.py
 --t_feat_dim ${t_feat_dim} \
 --bsz ${bsz} \
 --results_root ${results_root} \
---exp_id org \
+--exp_id noun_query \
+--query_json_file ../llama_query/1/train_output.json
 ${@:1}
-
-
-# CUDA_VISIBLE_DEVICES=${gpu_num} PYTHONPATH=$PYTHONPATH:. python qd_detr/train.py \
-# --dset_name ${dset_name} \
-# --ctx_mode ${ctx_mode} \
-# --train_path ${train_path} \
-# --eval_path ${eval_path} \
-# --eval_split_name ${eval_split_name} \
-# --v_feat_dirs ${v_feat_dirs[@]} \
-# --v_feat_dim ${v_feat_dim} \
-# --t_feat_dir ${t_feat_dir} \
-# --t_feat_dim ${t_feat_dim} \
-# --bsz ${bsz} \
-# --results_root ${results_root} \
-# --exp_id noun_query \
-# --query_json_file ../llama_query/1/query.json
-# ${@:1}

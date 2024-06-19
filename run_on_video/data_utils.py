@@ -1,7 +1,7 @@
 import torch
 import os
 import numpy as np
-import ffmpeg
+# import ffmpeg
 import math
 from run_on_video import clip
 

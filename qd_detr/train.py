@@ -341,6 +341,10 @@ def start_training():
     print(opt.a_feat_dir is None)
     print(opt.a_feat_dir)
     print('##################')
+
+    if opt.query_json_file is not None:
+        torch.multiprocessing.set_start_method('spawn')
+        
     if opt.a_feat_dir is None:
         dataset_config = dict(
             dset_name=opt.dset_name,
@@ -359,6 +363,7 @@ def start_training():
             span_loss_type=opt.span_loss_type,
             txt_drop_ratio=opt.txt_drop_ratio,
             dset_domain=opt.dset_domain,
+            query_json_file=opt.query_json_file,
         )
         dataset_config["data_path"] = opt.train_path
         train_dataset = StartEndDataset(**dataset_config)
@@ -381,6 +386,7 @@ def start_training():
             span_loss_type=opt.span_loss_type,
             txt_drop_ratio=opt.txt_drop_ratio,
             dset_domain=opt.dset_domain,
+            query_json_file=opt.query_json_file,
         )
         dataset_config["data_path"] = opt.train_path
         train_dataset = StartEndDataset_audio(**dataset_config)
@@ -391,6 +397,7 @@ def start_training():
         dataset_config["data_path"] = opt.eval_path
         dataset_config["txt_drop_ratio"] = 0
         dataset_config["q_feat_dir"] = opt.t_feat_dir.replace("sub_features", "text_features")  # for pretraining
+        dataset_config["query_json_file"] = None
         # dataset_config["load_labels"] = False  # uncomment to calculate eval loss
         if opt.a_feat_dir is None:
             eval_dataset = StartEndDataset(**dataset_config)
