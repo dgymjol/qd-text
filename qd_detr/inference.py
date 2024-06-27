@@ -347,6 +347,7 @@ def start_inference(train_opt=None, split=None, splitfile=None):
     print(opt.eval_path)
     logger.info("Setup config, data and model...")
 
+    # opt.t_feat_dir="../llama_query/8/features"
 
     cudnn.benchmark = True
     cudnn.deterministic = False
@@ -376,6 +377,7 @@ def start_inference(train_opt=None, split=None, splitfile=None):
             span_loss_type=opt.span_loss_type,
             txt_drop_ratio=0,
             dset_domain=opt.dset_domain,
+            query_json_file=opt.query_json_file,
         )
     else:
         print("Video+Audio Evaluation")
@@ -398,6 +400,7 @@ def start_inference(train_opt=None, split=None, splitfile=None):
             span_loss_type=opt.span_loss_type,
             txt_drop_ratio=0,
             dset_domain=opt.dset_domain,
+            query_json_file=opt.query_json_file,
         )
 
 

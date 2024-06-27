@@ -74,7 +74,8 @@ class StartEndDataset(Dataset):
             self.data = new_data
         
         if query_json_file is not None:
-            with open(query_json_file, 'r') as f: 
+            self.query_json_file = query_json_file
+            with open(join(query_json_file, 'train_output.json'), 'r') as f: 
                 self.query_json = json.load(f)
 
             clip_model_name_or_path = clip_model_name_or_path
@@ -287,6 +288,9 @@ class StartEndDataset(Dataset):
             query_list = [self.query_json[str(qid)]]
             q_feat = self.feature_extractor.encode_text(query_list)[0]  # #text * (L, d)
 
+            # np.save(join(self.query_json_file,"features/{}.npz".format(qid)), q_feat)
+            # print("save query features to {}".format(join(self.query_json_file,"features/qid{}.npz".format(qid))))
+
             if self.q_feat_type == "last_hidden_state":
                 q_feat = q_feat[:self.max_q_l]
             if self.normalize_t:
@@ -295,7 +299,7 @@ class StartEndDataset(Dataset):
                 q_feat = self.random_drop_rows(q_feat)
 
             return q_feat
-        
+
         else:
 
             if self.dset_name == 'tvsum':

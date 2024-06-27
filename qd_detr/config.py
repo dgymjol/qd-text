@@ -150,6 +150,7 @@ class BaseOptions(object):
         
 
         parser.add_argument("--query_json_file", type=str, default=None)
+        parser.add_argument("--train_t_feat_dir", type=str, default=None, help="another text/query feature dir for training")
         
         self.parser = parser
 
