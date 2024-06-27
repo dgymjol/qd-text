@@ -308,14 +308,20 @@ class StartEndDataset(Dataset):
             else:
                 # QVhighlight dataset
                 q_feat_path = join(self.q_feat_dir, f"qid{qid}.npz")
-                q_feat = np.load(q_feat_path)[self.q_feat_type].astype(np.float32)
-                if self.q_feat_type == "last_hidden_state":
-                    q_feat = q_feat[:self.max_q_l]
+
+                hidden_state = np.load(q_feat_path)['last_hidden_state'].astype(np.float32)
+                hidden_state = hidden_state[:self.max_q_l]
                 if self.normalize_t:
-                    q_feat = l2_normalize_np_array(q_feat)
+                    hidden_state = l2_normalize_np_array(hidden_state)
+
+                final_feat = np.load(q_feat_path)['pooler_output'].astype(np.float32)
+                final_feat = np.expand_dims(final_feat, axis=0)
+
+                q_feat = np.concatenate([final_feat, hidden_state])
+
                 if self.txt_drop_ratio > 0:
                     q_feat = self.random_drop_rows(q_feat)
-
+                
             return torch.from_numpy(q_feat)  # (D, ) or (Lq, D)
 
     def random_drop_rows(self, embeddings):

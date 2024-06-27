@@ -37,9 +37,9 @@ fi
 #### training
 bsz=32
 
-gpu_num=1
+gpu_num=0
 
-seed=2023
+seed=2021
 
 CUDA_VISIBLE_DEVICES=${gpu_num} PYTHONPATH=$PYTHONPATH:. python qd_detr/train.py \
 --dset_name ${dset_name} \
@@ -57,7 +57,7 @@ CUDA_VISIBLE_DEVICES=${gpu_num} PYTHONPATH=$PYTHONPATH:. python qd_detr/train.py
 --seed ${seed} \
 ${@:1}
 
-seed=2024
+seed=2022
 
 CUDA_VISIBLE_DEVICES=${gpu_num} PYTHONPATH=$PYTHONPATH:. python qd_detr/train.py \
 --dset_name ${dset_name} \
